@@ -6,14 +6,31 @@ import { RectButton } from 'react-native-gesture-handler'
 import { level1 } from '../game/levels/level1'
 import { Physics } from '../game/systems/Phisics'
 
-export const GameScreen = () => {
-	const engineRef = React.useRef<any>(null)
+type EngineAction =
+	| { type: 'move'; x: number }
+	| { type: 'stop' }
+	| { type: 'jump' }
+	| { type: 'respawn' }
+type GameEvent = { type: 'player_fell' }
+type JoystickMoveEvent = {
+	position: {
+		x: number
+		y: number
+	}
+}
+type Entities = typeof level1
+type EngineRef = {
+	dispatch: (action: EngineAction) => void
+} | null
 
-	const getInitialEntities = () => {
+export const GameScreen = () => {
+	const engineRef = React.useRef<EngineRef>(null)
+
+	const getInitialEntities = (): Entities => {
 		return level1
 	}
 
-	const handleMove = (event: any) => {
+	const handleMove = (event: JoystickMoveEvent) => {
 		const engine = engineRef.current
 		if (!engine) return
 
@@ -25,29 +42,29 @@ export const GameScreen = () => {
 			x: dx,
 		})
 	}
+
 	const respawnPlayer = () => {
-		const engine = engineRef.current
-		if (engine) {
-			engine.dispatch({
-				type: 'respawn',
-			})
-		}
+		engineRef.current?.dispatch({
+			type: 'respawn',
+		})
 	}
 
-	const onEvent = (e) => {
+	const onEvent = (e: GameEvent) => {
 		if (e.type === 'player_fell') {
 			respawnPlayer()
 		}
 	}
+
 	return (
 		<>
 			<GameEngine
-				ref={engineRef}
+				ref={engineRef as any}
 				style={{ flex: 1 }}
 				systems={[Physics]}
 				entities={getInitialEntities()}
-				onEvent={(e) => onEvent(e)}
+				onEvent={onEvent}
 			/>
+
 			<View
 				style={{
 					position: 'absolute',
@@ -60,7 +77,7 @@ export const GameScreen = () => {
 				<ReactNativeJoystick
 					color="#06b6d4"
 					radius={75}
-					onMove={(data) => handleMove(data)}
+					onMove={handleMove}
 					onStop={() => {
 						engineRef.current?.dispatch({
 							type: 'stop',
@@ -68,6 +85,7 @@ export const GameScreen = () => {
 					}}
 				/>
 			</View>
+
 			<View
 				style={{
 					position: 'absolute',
@@ -77,7 +95,7 @@ export const GameScreen = () => {
 					elevation: 999,
 				}}
 			>
-				<RectButton 
+				<RectButton
 					onPress={() => {
 						engineRef.current?.dispatch({
 							type: 'jump',

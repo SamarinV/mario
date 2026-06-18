@@ -1,11 +1,18 @@
 import React from 'react'
 import { View } from 'react-native'
+import Matter from 'matter-js'
 
-export const Player = (props: any) => {
-	// В Matter x и y — это ЦЕНТР тела
+type PlayerProps = {
+	body: Matter.Body
+	size: [number, number]
+	cameraX: number
+}
+
+export const Player: React.FC<PlayerProps> = (props) => {
 	const { x, y } = props.body.position
 	const [width, height] = props.size
-	 const cameraX = props.cameraX || 0
+	const cameraX = props.cameraX ?? 0
+
 	const left = x - width / 2 - cameraX
 	const top = y - height / 2
 
@@ -13,13 +20,12 @@ export const Player = (props: any) => {
 		<View
 			style={{
 				position: 'absolute',
-				left: left,
-				top: top,
-				width: width,
-				height: height,
+				left,
+				top,
+				width,
+				height,
 				backgroundColor: 'red',
 			}}
 		/>
 	)
 }
-

@@ -1,7 +1,14 @@
 import React from 'react'
 import { View } from 'react-native'
+import Matter from 'matter-js'
 
-export const Ground = (props: any) => {
+type PlayerProps = {
+	body: Matter.Body
+	size: [number, number]
+	cameraX: number
+}
+
+export const Ground: React.FC<PlayerProps> = (props) => {
 	// В Matter x и y — это ЦЕНТР тела
 	const { x, y } = props.body.position
 	const [width, height] = props.size

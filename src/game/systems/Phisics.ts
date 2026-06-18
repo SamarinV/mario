@@ -1,9 +1,45 @@
 import Matter from 'matter-js'
 import { Dimensions } from 'react-native'
 
+type PhysicsEvent =
+	| { type: 'move'; x: number }
+	| { type: 'stop' }
+	| { type: 'jump' }
+	| { type: 'respawn' }
+	| { type: 'player_fell' }
+
+type EngineContext = {
+	events: PhysicsEvent[]
+	dispatch: (event: PhysicsEvent) => void
+}
+
+type Body = Matter.Body
+
+type PlayerEntity = {
+	body: Body
+	currentMoveX: number
+	dead: boolean
+	cameraX?: number
+}
+
+type CameraEntity = {
+	x: number
+}
+
+type PhysicsEntity = {
+	engine: Matter.Engine
+}
+
+type Entities = {
+	physics: PhysicsEntity
+	player: PlayerEntity
+	camera: CameraEntity
+	[key: string]: any // ECS гибкость (важно не ломать GameEngine)
+}
+
 const { height } = Dimensions.get('window')
 
-export const Physics = (entities: any, { events, dispatch }: any) => {
+export const Physics = (entities: Entities, { events, dispatch }: EngineContext): Entities => {
 	const engine = entities.physics.engine
 	const player = entities.player
 
@@ -19,17 +55,13 @@ export const Physics = (entities: any, { events, dispatch }: any) => {
 		player.body.friction = 0
 		player.body.frictionAir = 0
 	}
-
-	// 1. СОЗДАЕМ ЛОКАЛЬНУЮ ПЕРЕМЕННУЮ ХРАНЕНИЯ СКОРОСТИ
-	// Если её ещё нет в объекте игрока, инициализируем нулем
 	if (player.currentMoveX === undefined) {
 		player.currentMoveX = 0
 	}
 
-	// 2. Обработка input событий (Только обновляет значение, но не двигает!)
+	// 2. Обработка событий
 	events.forEach((event: any) => {
 		if (event.type === 'move') {
-			// Просто записываем текущее смещение джойстика в память игрока
 			player.currentMoveX = event.x
 		}
 
@@ -62,18 +94,15 @@ export const Physics = (entities: any, { events, dispatch }: any) => {
 	})
 
 	// 3. ПРИНУДИТЕЛЬНОЕ УДЕРЖАНИЕ СКОРОСТИ (Вне цикла events)
-	// Этот код выполняется КАЖДЫЙ кадр игры. Даже если массив events пустой,
-	// движок помнит последнее значение player.currentMoveX и заставляет тело двигаться.
 	Matter.Body.setVelocity(player.body, {
-		x: player.currentMoveX * 5, // Множитель скорости бега (подстройте под себя)
-		y: player.body.velocity.y, // Обязательно сохраняем нативную гравитацию по Y!
+		x: player.currentMoveX * 5, // скорость бега
+		y: player.body.velocity.y, // гравитация
 	})
 
 	// 4. Шаг симуляции Matter.js
 	Matter.Engine.update(engine, 1000 / 60)
 
 	// 5. Камера
-	// console.log('camera', entities.camera)
 	const camera = entities.camera
 	if (camera) {
 		const SCREEN_CENTER_X = 150
