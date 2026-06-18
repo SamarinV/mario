@@ -43,6 +43,23 @@ groundsConfig.forEach((config, index) => {
 	}
 })
 
+// Стены
+const wallThickness = 300
+const levelWidth = Math.max(...groundsConfig.map(([x, , w]) => x + w))
+const rightWallX = levelWidth + wallThickness / 2
+
+const leftWall = Matter.Bodies.rectangle(
+	-wallThickness / 2,
+	height / 2,
+	wallThickness,
+	height * 2,
+	{ isStatic: true },
+)
+const rightWall = Matter.Bodies.rectangle(rightWallX, height / 2, wallThickness, height * 2, {
+	isStatic: true,
+})
+Matter.World.add(world, [leftWall, rightWall])
+
 export const level1 = {
 	physics: { engine, world },
 	camera: {
@@ -55,5 +72,7 @@ export const level1 = {
 		dead: false,
 		renderer: Player,
 	},
+	leftWall: { body: leftWall, render: { visible: false } },
+	rightWall: { body: rightWall, render: { visible: false } },
 	...groundEntities,
 }
