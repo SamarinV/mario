@@ -1,22 +1,25 @@
 import React from 'react'
 import { View } from 'react-native'
 
-type PlayerProps = {
-	position: [number, number]
-	size: [number, number]
-}
+export const Player = (props: any) => {
+	// В Matter x и y — это ЦЕНТР тела
+	const { x, y } = props.body.position
+	const [width, height] = props.size
+	 const cameraX = props.cameraX || 0
+	const left = x - width / 2 - cameraX
+	const top = y - height / 2
 
-export const Player = ({ position, size }: PlayerProps) => {
 	return (
 		<View
 			style={{
 				position: 'absolute',
-				left: position[0],
-				top: position[1],
-				width: size[0],
-				height: size[1],
+				left: left,
+				top: top,
+				width: width,
+				height: height,
 				backgroundColor: 'red',
 			}}
 		/>
 	)
 }
+

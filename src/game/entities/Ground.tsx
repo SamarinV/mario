@@ -1,26 +1,21 @@
 import React from 'react'
 import { View } from 'react-native'
 
-type GroundProps = {
-	position: [number, number]
-	size: [number, number]
-}
-
-export const Ground = ({ position, size }: GroundProps) => {
-	const width = size[0]
-	const height = size[1]
-
-	const x = position[0]
-	const y = position[1]
-
+export const Ground = (props: any) => {
+	// В Matter x и y — это ЦЕНТР тела
+	const { x, y } = props.body.position
+	const [width, height] = props.size
+	 const cameraX = props.cameraX || 0
+	const left = x - width / 2 - cameraX
+	const top = y - height / 2
 	return (
 		<View
 			style={{
 				position: 'absolute',
-				left: x,
-				top: y,
-				width,
-				height,
+				left: left,
+				top: top,
+				width: width,
+				height: height,
 				backgroundColor: 'green',
 			}}
 		/>
