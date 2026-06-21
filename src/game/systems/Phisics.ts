@@ -1,5 +1,6 @@
 import Matter from 'matter-js'
 import { Dimensions } from 'react-native'
+import { AnimationPlayerStateType } from '../entities/Player'
 
 type PhysicsEvent =
 	| { type: 'move'; x: number }
@@ -21,7 +22,7 @@ type PlayerEntity = {
 	dead: boolean
 	cameraX?: number
 	sprite: any
-	state: string
+	state: AnimationPlayerStateType
 	frame: number
 	frameTimer: number
 }
@@ -100,13 +101,21 @@ export const Physics = (entities: Entities, { events, dispatch }: EngineContext)
 	// анимации
 	const isJumping = Math.abs(player.body.velocity.y) > 0.1
 	if (isJumping) {
-		player.state = 'jumpLeftRight'
-	} else if (player.currentMoveX > 0) {
-		player.state = 'runRight'
-	} else if (player.currentMoveX < 0) {
-		player.state = 'runLeft'
+		// Если прыгает, проверяем, куда направлено движение в этот момент
+		if (player.currentMoveX >= 0) {
+			player.state = 'jumpRight' // или оставляем jumpLeftRight, но управляем кадром
+		} else if (player.currentMoveX < 0) {
+			player.state = 'jumpLeft'
+		}
 	} else {
-		player.state = 'idleLeftRight'
+		// Логика для бега и покоя срабатывает, только если игрок на земле
+		if (player.currentMoveX > 0) {
+			player.state = 'runRight'
+		} else if (player.currentMoveX < 0) {
+			player.state = 'runLeft'
+		} else {
+			player.state = 'idleRight'
+		}
 	}
 	//переключение кадров
 	const FRAMES_PER_ANIM = 6

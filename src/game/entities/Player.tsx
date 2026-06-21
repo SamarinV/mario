@@ -10,11 +10,8 @@ interface AnimationFrame {
 
 // Strictly type the allowed animation states using object keys
 const animations = {
-	test: [{ x: 232, y: -70 }],
-	idleLeftRight: [
-		{ x: 75, y: -70 },
-		{ x: 115, y: -70 },
-	],
+	idleLeft: [{ x: 75, y: -70 }],
+	idleRight: [{ x: 115, y: -70 }],
 	runLeft: [
 		{ x: 40, y: -70 },
 		{ x: 0, y: -70 },
@@ -23,21 +20,19 @@ const animations = {
 		{ x: 150, y: -70 },
 		{ x: 191, y: -70 },
 	],
-	jumpLeftRight: [
-		{ x: -40, y: -70 },
-		{ x: 232, y: -70 },
-	],
+	jumpLeft: [{ x: -40, y: -70 }],
+	jumpRight: [{ x: 232, y: -70 }],
 } as const
 
 // Extract the valid state strings dynamically from the animations object
-type AnimationState = keyof typeof animations
+export type AnimationPlayerStateType = keyof typeof animations
 
 type PlayerProps = {
 	body: Matter.Body
 	size: [number, number]
 	cameraX: number
 	sprite: string | HTMLImageElement // Replaced 'any' with explicit asset types
-	state: AnimationState // Enforces type-safety for incoming player states
+	state: AnimationPlayerStateType // Enforces type-safety for incoming player states
 	frame: number
 	frameTimer: number
 }
@@ -58,7 +53,7 @@ export const Player: React.FC<PlayerProps> = ({
 	const top = y - height / 2
 
 	// Fallback safe reference to the active animation list
-	const activeAnimation: readonly AnimationFrame[] = animations[state] ?? animations.test
+	const activeAnimation: readonly AnimationFrame[] = animations[state] ?? animations.idleRight
 
 	// Calculate current active frame coordinates cleanly without mutations
 	let currentFrame: AnimationFrame
