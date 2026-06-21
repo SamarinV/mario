@@ -9,18 +9,20 @@ const engine = Matter.Engine.create({ enableSleeping: false })
 const world = engine.world
 engine.gravity.y = 1.2
 
-const playerBody = Matter.Bodies.rectangle(100, 100, 50, 50, {
+const playerBody = Matter.Bodies.rectangle(500, 500, 20, 60, {
 	label: 'Player',
 	inertia: Infinity,
 })
 Matter.World.add(world, [playerBody])
 
 // Земли [X_левый_угол, Y_верхний_угол, ширина, высота]
+// длина только кратная
 const groundsConfig = [
-	[0, height - 100, 250, 100],
-	[350, height - 150, 150, 50],
-	[600, height - 200, 2000, 50],
-	[900, height - 100, 300, 100],
+	[0, height - 50, 400, 50],
+	[0, height - 150, 50, 50],
+	[500, height - 50, 600, 50],
+	[600, height - 300, 200, 50],
+	[650, height - 180, 600, 50],
 ]
 
 // Земли
@@ -67,10 +69,15 @@ export const level1 = {
 	},
 	player: {
 		body: playerBody,
-		size: [50, 50],
+		size: [50, 70],
 		velocity: { x: 0, y: 0 },
 		dead: false,
 		renderer: Player,
+		sprite: require('../../../assets/images/mariro-sprite.png'),
+
+		state: 'test' as 'test' | 'idle' | 'run' | 'jump',
+		frame: 0,
+		frameTimer: 0,
 	},
 	leftWall: { body: leftWall, render: { visible: false } },
 	rightWall: { body: rightWall, render: { visible: false } },

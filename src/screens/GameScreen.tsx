@@ -1,8 +1,8 @@
-import { ReactNativeJoystick } from '@korsolutions/react-native-joystick'
 import React from 'react'
 import { Text, View } from 'react-native'
 import { GameEngine } from 'react-native-game-engine'
 import { RectButton } from 'react-native-gesture-handler'
+import { CustomJoystick } from '../components/CustomJoystick'
 import { level1 } from '../game/levels/level1'
 import { Physics } from '../game/systems/Phisics'
 
@@ -13,10 +13,9 @@ type EngineAction =
 	| { type: 'respawn' }
 type GameEvent = { type: 'player_fell' }
 type JoystickMoveEvent = {
-	position: {
-		x: number
-		y: number
-	}
+	x: number
+	y: number
+	angle: number
 }
 type Entities = typeof level1
 type EngineRef = {
@@ -34,12 +33,9 @@ export const GameScreen = () => {
 		const engine = engineRef.current
 		if (!engine) return
 
-		// центр джойстика ≈ 50
-		const dx = (event.position.x - 50) / 50
-
 		engine.dispatch({
 			type: 'move',
-			x: dx,
+			x: event.x,
 		})
 	}
 
@@ -59,7 +55,7 @@ export const GameScreen = () => {
 		<>
 			<GameEngine
 				ref={engineRef as any}
-				style={{ flex: 1 }}
+				style={{ flex: 1, backgroundColor: '#73cdfa' }}
 				systems={[Physics]}
 				entities={getInitialEntities()}
 				onEvent={onEvent}
@@ -74,8 +70,7 @@ export const GameScreen = () => {
 					elevation: 999,
 				}}
 			>
-				<ReactNativeJoystick
-					color="#06b6d4"
+				<CustomJoystick
 					radius={75}
 					onMove={handleMove}
 					onStop={() => {
@@ -105,9 +100,10 @@ export const GameScreen = () => {
 						width: 100,
 						height: 100,
 						borderRadius: 50,
-						backgroundColor: '#06b6d4',
+						backgroundColor: '#474747',
 						justifyContent: 'center',
 						alignItems: 'center',
+						opacity: 0.6,
 					}}
 				>
 					<Text

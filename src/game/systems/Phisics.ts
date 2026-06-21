@@ -20,6 +20,10 @@ type PlayerEntity = {
 	currentMoveX: number
 	dead: boolean
 	cameraX?: number
+	sprite: any
+	state: string
+	frame: number
+	frameTimer: number
 }
 
 type CameraEntity = {
@@ -34,7 +38,7 @@ type Entities = {
 	physics: PhysicsEntity
 	player: PlayerEntity
 	camera: CameraEntity
-	[key: string]: any // ECS гибкость (важно не ломать GameEngine)
+	[key: string]: any
 }
 
 const { height } = Dimensions.get('window')
@@ -76,14 +80,14 @@ export const Physics = (entities: Entities, { events, dispatch }: EngineContext)
 			if (Math.abs(player.body.velocity.y) < 0.1) {
 				Matter.Body.setVelocity(player.body, {
 					x: player.body.velocity.x,
-					y: -12,
+					y: -10,
 				})
 			}
 		}
 
 		if (event.type === 'respawn') {
 			const newX = player.body.position.x - 100
-			const newY = 50
+			const newY = 250
 			Matter.Body.setPosition(player.body, { x: newX, y: newY })
 			Matter.Body.setVelocity(player.body, { x: 0, y: 0 })
 			Matter.Body.setAngularVelocity(player.body, 0)
@@ -92,6 +96,25 @@ export const Physics = (entities: Entities, { events, dispatch }: EngineContext)
 			player.dead = false
 		}
 	})
+
+	// анимации
+	const isJumping = Math.abs(player.body.velocity.y) > 0.1
+	if (isJumping) {
+		player.state = 'jumpLeftRight'
+	} else if (player.currentMoveX > 0) {
+		player.state = 'runRight'
+	} else if (player.currentMoveX < 0) {
+		player.state = 'runLeft'
+	} else {
+		player.state = 'idleLeftRight'
+	}
+	//переключение кадров
+	const FRAMES_PER_ANIM = 6
+	player.frameTimer += 1
+	if (player.frameTimer >= FRAMES_PER_ANIM) {
+		player.frameTimer = 0
+		player.frame = (player.frame + 1) % 4 // допустим 4 кадра
+	}
 
 	// 3. ПРИНУДИТЕЛЬНОЕ УДЕРЖАНИЕ СКОРОСТИ (Вне цикла events)
 	Matter.Body.setVelocity(player.body, {
@@ -105,7 +128,7 @@ export const Physics = (entities: Entities, { events, dispatch }: EngineContext)
 	// 5. Камера
 	const camera = entities.camera
 	if (camera) {
-		const SCREEN_CENTER_X = 150
+		const SCREEN_CENTER_X = 350
 
 		camera.x = Math.max(0, player.body.position.x - SCREEN_CENTER_X)
 	}
