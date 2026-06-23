@@ -1,35 +1,28 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { GestureDetector, Gesture } from 'react-native-gesture-handler'
-import Animated, {
-	useAnimatedStyle,
-	useSharedValue,
-	withSpring,
-	runOnJS, // <-- Импортируем мост между потоками
-} from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
+import { scheduleOnRN } from 'react-native-worklets'
 
-interface JoystickProps {
-	onMove?: (data: { x: number; y: number; angle: number }) => void
-	onStop?: () => void
-	radius?: number
+export type JoystickMoveEventType = {
+	x: number
+	y: number
+	angle: number
 }
 
-export const CustomJoystick: React.FC<JoystickProps> = ({ onMove, onStop, radius = 70 }) => {
+type JoystickProps = {
+	onMove: (data: JoystickMoveEventType) => void
+	onStop: () => void
+	radius: number
+}
+
+export const CustomJoystick: React.FC<JoystickProps> = ({ onMove, onStop, radius }) => {
 	const stickRadius = radius / 2
 
 	const translateX = useSharedValue(0)
 	const translateY = useSharedValue(0)
 	const startX = useSharedValue(0)
 	const startY = useSharedValue(0)
-
-	// Создаем безопасные JS-функции, которые можно вызывать из ворклета
-	const safeOnMove = (x: number, y: number, angle: number) => {
-		if (onMove) onMove({ x, y, angle })
-	}
-
-	const safeOnStop = () => {
-		if (onStop) onStop()
-	}
 
 	const panGesture = Gesture.Pan()
 		.onBegin(() => {
@@ -51,25 +44,20 @@ export const CustomJoystick: React.FC<JoystickProps> = ({ onMove, onStop, radius
 				translateY.value = Math.sin(angle) * radius
 			}
 
-			// ИСПОЛЬЗУЕМ runOnJS для отправки координат в игру
-			if (onMove) {
-				const normalizedX = translateX.value / radius
-				const normalizedY = translateY.value / radius
-				const angleGrad = Math.atan2(-translateY.value, translateX.value) * (180 / Math.PI)
-				const finalAngle = angleGrad < 0 ? angleGrad + 360 : angleGrad
+			const normalizedX = translateX.value / radius
+			const normalizedY = translateY.value / radius
+			const angleGrad = Math.atan2(-translateY.value, translateX.value) * (180 / Math.PI)
+			const finalAngle = angleGrad < 0 ? angleGrad + 360 : angleGrad
 
-				// Вызываем JS функцию через мост Reanimated
-				runOnJS(safeOnMove)(normalizedX, normalizedY, finalAngle)
-			}
+			// ИСПРАВЛЕНИЕ: Передаем функцию и объект аргумента раздельно через запятую
+			scheduleOnRN(onMove, { x: normalizedX, y: normalizedY, angle: finalAngle })
 		})
 		.onFinalize(() => {
 			translateX.value = withSpring(0)
 			translateY.value = withSpring(0)
 
-			// ИСПОЛЬЗУЕМ runOnJS для остановки
-			if (onStop) {
-				runOnJS(safeOnStop)()
-			}
+			// ИСПРАВЛЕНИЕ: Вызываем функцию остановки через планировщик
+			scheduleOnRN(onStop)
 		})
 
 	const animatedStickStyle = useAnimatedStyle(() => ({

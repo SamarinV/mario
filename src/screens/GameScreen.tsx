@@ -2,24 +2,20 @@ import React from 'react'
 import { Text, View } from 'react-native'
 import { GameEngine } from 'react-native-game-engine'
 import { RectButton } from 'react-native-gesture-handler'
-import { CustomJoystick } from '../components/CustomJoystick'
+import { CustomJoystick, JoystickMoveEventType } from '../components/CustomJoystick'
 import { level1 } from '../game/levels/level1'
-import { Physics } from '../game/systems/Phisics'
+import { PhysicsEvent } from '../game/systems/types'
+import {
+	animationSystem,
+	cameraSystem,
+	controlSystem,
+	cutsceneSystem,
+	physicsSystem,
+} from '../game/systems'
 
-type EngineAction =
-	| { type: 'move'; x: number }
-	| { type: 'stop' }
-	| { type: 'jump' }
-	| { type: 'respawn' }
-type GameEvent = { type: 'player_fell' }
-type JoystickMoveEvent = {
-	x: number
-	y: number
-	angle: number
-}
 type Entities = typeof level1
 type EngineRef = {
-	dispatch: (action: EngineAction) => void
+	dispatch: (action: PhysicsEvent) => void
 } | null
 
 export const GameScreen = () => {
@@ -29,10 +25,9 @@ export const GameScreen = () => {
 		return level1
 	}
 
-	const handleMove = (event: JoystickMoveEvent) => {
+	const handleMove = (event: JoystickMoveEventType) => {
 		const engine = engineRef.current
 		if (!engine) return
-
 		engine.dispatch({
 			type: 'move',
 			x: event.x,
@@ -45,7 +40,7 @@ export const GameScreen = () => {
 		})
 	}
 
-	const onEvent = (e: GameEvent) => {
+	const onEvent = (e: PhysicsEvent) => {
 		if (e.type === 'player_fell') {
 			respawnPlayer()
 		}
@@ -56,7 +51,7 @@ export const GameScreen = () => {
 			<GameEngine
 				ref={engineRef as any}
 				style={{ flex: 1, backgroundColor: '#73cdfa' }}
-				systems={[Physics]}
+				systems={[controlSystem, animationSystem, cutsceneSystem, physicsSystem, cameraSystem]}
 				entities={getInitialEntities()}
 				onEvent={onEvent}
 			/>
