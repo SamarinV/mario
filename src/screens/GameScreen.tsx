@@ -1,18 +1,20 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Text, View } from 'react-native'
 import { GameEngine } from 'react-native-game-engine'
 import { RectButton } from 'react-native-gesture-handler'
 import { CustomJoystick, JoystickMoveEventType } from '../components/CustomJoystick'
+import { RenderLevel } from '../components/RenderLevel'
 import { level1 } from '../game/levels/level1'
-import { PhysicsEvent } from '../game/systems/types'
 import {
 	animationSystem,
 	cameraSystem,
 	controlSystem,
 	cutsceneSystem,
 	physicsSystem,
+	coinEffectSystem,
 } from '../game/systems'
-import { RenderLevel } from '../components/RenderLevel'
+import { setupEngine } from '../game/systems/setupEngine'
+import { PhysicsEvent } from '../game/systems/types'
 
 type Entities = typeof level1
 type EngineRef = {
@@ -25,6 +27,7 @@ export const GameScreen = () => {
 	const getInitialEntities = (): Entities => {
 		return level1
 	}
+	const entities = getInitialEntities()
 
 	const handleMove = (event: JoystickMoveEventType) => {
 		const engine = engineRef.current
@@ -41,6 +44,12 @@ export const GameScreen = () => {
 		})
 	}
 
+	useEffect(() => {
+		if (!entities) return
+
+		setupEngine(entities.physics.engine, entities, (event) => engineRef.current?.dispatch(event))
+	}, [])
+
 	const onEvent = (e: PhysicsEvent) => {
 		if (e.type === 'player_fell') {
 			respawnPlayer()
@@ -52,8 +61,15 @@ export const GameScreen = () => {
 			<GameEngine
 				ref={engineRef as any}
 				style={{ flex: 1, backgroundColor: '#73cdfa' }}
-				systems={[controlSystem, animationSystem, cutsceneSystem, physicsSystem, cameraSystem]}
-				entities={getInitialEntities()}
+				systems={[
+					controlSystem,
+					animationSystem,
+					cutsceneSystem,
+					physicsSystem,
+					cameraSystem,
+					coinEffectSystem,
+				]}
+				entities={entities}
 				onEvent={onEvent}
 				renderer={RenderLevel}
 			/>

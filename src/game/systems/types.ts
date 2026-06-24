@@ -7,6 +7,13 @@ export type PhysicsEvent =
 	| { type: 'respawn' }
 	| { type: 'player_fell' }
 	| { type: 'level_completed' }
+	| {
+			type: 'break_block'
+			payload: {
+				blockKey: string
+				blockBody: any // или Matter.Body, если импортирован matter-js
+			}
+	  }
 
 export type EngineContext = {
 	events: PhysicsEvent[]
@@ -42,6 +49,12 @@ export type GroundEntityType = {
 	body: Matter.Body
 	size: [number, number]
 	cameraX: number
+}
+export type BlockEntityType = {
+	body: Matter.Body
+	size: [number, number]
+	cameraX: number
+	isDestroyed?: boolean
 }
 
 export type EntitiesType = {

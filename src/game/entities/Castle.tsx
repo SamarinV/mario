@@ -12,7 +12,7 @@ export const Castle: React.FC<FlagpoleProps> = ({ size, body }) => {
 
 	return (
 		<Image
-			source={require('../../assets/images/castle.png')}
+			source={require('../../../assets/images/castle.png')}
 			style={{
 				position: 'absolute',
 				left: x,

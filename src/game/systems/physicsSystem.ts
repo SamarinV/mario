@@ -7,13 +7,27 @@ export const physicsSystem = (entities: EntitiesType, { dispatch }: EngineContex
 	const { player } = entities
 
 	if (!player) return entities
+	Object.keys(entities).forEach((key) => {
+		const entity = entities[key]
 
-	//Удержание скорости движения
+		if (entity?.life !== undefined) {
+			entity.life--
+
+			if (entity.life <= 0) {
+				Matter.World.remove(entities.physics.world, entity.body)
+
+				delete entities[key]
+			}
+		}
+	})
+	// Удержание скорости движения
 	Matter.Body.setVelocity(player.body, { x: player.currentMoveX * 5, y: player.body.velocity.y })
 	Matter.Engine.update(engine, 1000 / 60)
 
+
+
 	// Проверка падения
-	if (player.body.position.y > entities.physics.levelHeight +200 && !player.dead) {
+	if (player.body.position.y > entities.physics.levelHeight + 200 && !player.dead) {
 		player.dead = true
 		dispatch({ type: 'player_fell' })
 	}

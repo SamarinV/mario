@@ -3,6 +3,7 @@ type Rect = { x: number; y: number; w: number; h: number }
 export const parseMap = (map: any) => {
 	const grounds: number[][] = []
 	const blocks: Rect[] = []
+	const coinBlocks: Rect[] = []
 
 	const collisionLayer = map.layers.find((l: any) => l.name === 'Collisions')
 	if (collisionLayer) {
@@ -23,12 +24,21 @@ export const parseMap = (map: any) => {
 				const y = row * TILE_SIZE
 				blocks.push({ x, y, w: TILE_SIZE, h: TILE_SIZE })
 			}
+			if (tile === 53) {
+				// Если это блок с монетой
+				const col = index % map.width
+				const row = Math.floor(index / map.width)
+				const x = col * TILE_SIZE
+				const y = row * TILE_SIZE
+				coinBlocks.push({ x, y, w: TILE_SIZE, h: TILE_SIZE })
+			}
 		})
 	}
 
 	return {
 		grounds,
 		blocks,
+		coinBlocks,
 		levelHeight: map.height * TILE_SIZE,
 		levelWidth: map.width * TILE_SIZE,
 	}

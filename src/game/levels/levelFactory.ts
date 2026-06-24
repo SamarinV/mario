@@ -3,14 +3,15 @@ import { Dimensions } from 'react-native'
 import { Ground } from '../entities/Ground'
 import { Player } from '../entities/Player'
 import { EntitiesType } from '../systems/types'
-import { Flagpole } from '../../components/Flagpole'
-import { Castle } from '../../components/Castle'
+import { Flagpole } from '../entities/Flagpole'
+import { Castle } from '../entities/Castle'
 
 const { height: screenHeight } = Dimensions.get('window')
 type Rect = { x: number; y: number; w: number; h: number }
 interface LevelConfig {
 	grounds: number[][]
 	blocks: Rect[]
+	coinBlocks?: Rect[]
 	levelHeight: number
 	flagpoleOffsetFromEnd?: number
 }
@@ -142,6 +143,24 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		}
 	})
 
+	// ---------------- COIN BLOCKS ----------------
+	const coinBlockEntities: Record<string, any> = {}
+	;(config.coinBlocks ?? []).forEach((b, i) => {
+		const body = Matter.Bodies.rectangle(b.x + b.w / 2, b.y + b.h / 2, b.w, b.h, {
+			isStatic: true,
+			label: `CoinBlock_${i}`,
+		})
+
+		Matter.World.add(world, body)
+
+		coinBlockEntities[`coinBlock_${i}`] = {
+			body,
+			size: [b.w, b.h],
+			renderer: require('../entities/CoinBlock').CoinBlock,
+			used: false,
+		}
+	})
+
 	Matter.World.add(world, [flagpoleBody, leftWall, rightWall, playerBody, castleBody])
 
 	return {
@@ -177,5 +196,6 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		rightWall: { body: rightWall, render: { visible: false } },
 		...groundEntities,
 		...blockEntities,
+		...coinBlockEntities,
 	}
 }
