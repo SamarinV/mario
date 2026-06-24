@@ -25,14 +25,13 @@ const animations = {
 export const Player: React.FC<PlayerEntityType> = ({
 	body,
 	size,
-	cameraX = 0,
 	sprite,
 	state,
 	frame,
 }) => {
 	const { x, y } = body.position
 	const [width, height] = size
-	const left = x - width / 2 - cameraX
+	const left = x - width / 2
 	const top = y - height / 2
 	const activeAnimation: readonly AnimationFrame[] = animations[state] ?? animations.idleRight
 	let currentFrame: AnimationFrame

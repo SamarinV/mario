@@ -5,14 +5,14 @@ import { View } from 'react-native'
 interface FlagpoleProps {
 	size: [number, number]
 	body: Matter.Body
-	cameraX?: number
 	flagOffset?: number
 }
 
-export const Flagpole: React.FC<FlagpoleProps> = ({ size, body, cameraX = 0, flagOffset = 0 }) => {
+export const Flagpole: React.FC<FlagpoleProps> = ({ size, body, flagOffset = 0 }) => {
 	const [width, height] = size
 
-	const x = body.position.x - width / 2 - cameraX
+	console.log(flagOffset)
+	const x = body.position.x - width / 2 - 50
 	const y = body.position.y - height / 2
 
 	const ballSize = 24

@@ -12,6 +12,7 @@ import {
 	cutsceneSystem,
 	physicsSystem,
 } from '../game/systems'
+import { RenderLevel } from '../components/RenderLevel'
 
 type Entities = typeof level1
 type EngineRef = {
@@ -54,6 +55,7 @@ export const GameScreen = () => {
 				systems={[controlSystem, animationSystem, cutsceneSystem, physicsSystem, cameraSystem]}
 				entities={getInitialEntities()}
 				onEvent={onEvent}
+				renderer={RenderLevel}
 			/>
 
 			<View

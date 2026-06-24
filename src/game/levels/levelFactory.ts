@@ -1,16 +1,17 @@
 import Matter from 'matter-js'
 import { Dimensions } from 'react-native'
-import { Castle } from '../../components/Castle'
-import { Flagpole } from '../../components/Flagpole'
 import { Ground } from '../entities/Ground'
 import { Player } from '../entities/Player'
 import { EntitiesType } from '../systems/types'
+import { Flagpole } from '../../components/Flagpole'
+import { Castle } from '../../components/Castle'
 
 const { height } = Dimensions.get('window')
-
+type Rect = { x: number; y: number; w: number; h: number }
 interface LevelConfig {
 	playerStart: { x: number; y: number }
 	grounds: number[][]
+	blocks: Rect[]
 	flagpoleOffsetFromEnd?: number
 }
 
@@ -21,6 +22,16 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 
 	const levelWidth = Math.max(...config.grounds.map(([x, , w]) => x + w))
 
+	const createStatic = (rect: Rect, label: string) => {
+		const body = Matter.Bodies.rectangle(rect.x + rect.w / 2, rect.y + rect.h / 2, rect.w, rect.h, {
+			isStatic: true,
+			label,
+		})
+
+		Matter.World.add(world, body)
+
+		return body
+	}
 	//Игрок
 	const playerBody = Matter.Bodies.rectangle(config.playerStart.x, config.playerStart.y, 20, 60, {
 		label: 'Player',
@@ -66,7 +77,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	// Флагшток
 	const flagWidth = 40
 	const flagHeight = 300
-	const offset = config.flagpoleOffsetFromEnd ?? 150
+	const offset = config.flagpoleOffsetFromEnd ?? 350
 	const flagpoleBody = Matter.Bodies.rectangle(
 		levelWidth - offset,
 		height - 50 - flagHeight / 2,
@@ -90,6 +101,18 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		isSensor: true,
 	})
 
+	// ---------------- BLOCKS ----------------
+	const blockEntities: Record<string, any> = {};
+	(config.blocks ?? []).forEach((b, i) => {
+		const body = createStatic(b, `Block_${i}`)
+
+		blockEntities[`block_${i}`] = {
+			body,
+			size: [b.w, b.h],
+			renderer: require('../entities/Block').Block,
+		}
+	})
+
 	Matter.World.add(world, [flagpoleBody, leftWall, rightWall, playerBody, castleBody])
 
 	return {
@@ -99,10 +122,10 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		flagpole: {
 			body: flagpoleBody,
 			size: [flagWidth, flagHeight],
-			renderer: Flagpole,
 			flagOffset: 0,
 			isLowering: false,
 			isWalkingToCastle: false,
+			renderer: Flagpole,
 		},
 		castle: {
 			body: castleBody,
@@ -124,5 +147,6 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		leftWall: { body: leftWall, render: { visible: false } },
 		rightWall: { body: rightWall, render: { visible: false } },
 		...groundEntities,
+		...blockEntities,
 	}
 }
