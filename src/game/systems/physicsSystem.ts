@@ -2,8 +2,6 @@ import Matter from 'matter-js'
 import { Dimensions } from 'react-native'
 import { EngineContext, EntitiesType } from './types'
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window')
-
 export const physicsSystem = (entities: EntitiesType, { dispatch }: EngineContext) => {
 	const { engine } = entities.physics
 	const { player } = entities
@@ -15,7 +13,7 @@ export const physicsSystem = (entities: EntitiesType, { dispatch }: EngineContex
 	Matter.Engine.update(engine, 1000 / 60)
 
 	// Проверка падения
-	if (player.body.position.y > SCREEN_HEIGHT && !player.dead) {
+	if (player.body.position.y > entities.physics.levelHeight +200 && !player.dead) {
 		player.dead = true
 		dispatch({ type: 'player_fell' })
 	}

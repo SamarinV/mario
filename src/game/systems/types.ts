@@ -45,8 +45,8 @@ export type GroundEntityType = {
 }
 
 export type EntitiesType = {
-	physics: { engine: Matter.Engine; world: Matter.World }
-	camera: { x: number }
+	physics: { engine: Matter.Engine; world: Matter.World, levelHeight: number }
+	camera: { x: number, y: number }
 	player: PlayerEntityType
 	flagpole?: FlagpoleEntityType
 	castle?: { body: Matter.Body; size: [number, number]; renderer: any; cameraX?: number }

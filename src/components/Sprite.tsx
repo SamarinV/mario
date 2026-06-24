@@ -15,7 +15,7 @@ export const Sprite = ({ source, frameX, frameY, frameWidth, frameHeight, x, y }
 		<View
 			style={{
 				position: 'absolute',
-				left: x,
+				left: x+10,
 				top: y + 5,
 				width: frameWidth * 2,
 				height: frameHeight + 20,

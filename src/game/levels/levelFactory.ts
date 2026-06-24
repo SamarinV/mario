@@ -6,12 +6,12 @@ import { EntitiesType } from '../systems/types'
 import { Flagpole } from '../../components/Flagpole'
 import { Castle } from '../../components/Castle'
 
-const { height } = Dimensions.get('window')
+const { height: screenHeight } = Dimensions.get('window')
 type Rect = { x: number; y: number; w: number; h: number }
 interface LevelConfig {
-	playerStart: { x: number; y: number }
 	grounds: number[][]
 	blocks: Rect[]
+	levelHeight: number
 	flagpoleOffsetFromEnd?: number
 }
 
@@ -21,6 +21,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	engine.gravity.y = 1.2
 
 	const levelWidth = Math.max(...config.grounds.map(([x, , w]) => x + w))
+	const PLAYER = { x: 120, y: config.levelHeight - 150, width: 25, height: 60, radius: 15 }
 
 	const createStatic = (rect: Rect, label: string) => {
 		const body = Matter.Bodies.rectangle(rect.x + rect.w / 2, rect.y + rect.h / 2, rect.w, rect.h, {
@@ -33,9 +34,37 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		return body
 	}
 	//Игрок
-	const playerBody = Matter.Bodies.rectangle(config.playerStart.x, config.playerStart.y, 20, 60, {
+	const mainRect = Matter.Bodies.rectangle(
+		PLAYER.x,
+		PLAYER.y,
+		PLAYER.width,
+		PLAYER.height - PLAYER.width,
+		{ label: 'Player_Core' },
+	)
+
+	// 2. Создаем верхний круг (смещаем вверх от центра)
+	const topCircle = Matter.Bodies.circle(
+		PLAYER.x,
+		PLAYER.y - (PLAYER.height / 2 - PLAYER.radius),
+		PLAYER.radius,
+		{
+			label: 'Player_Top',
+		},
+	)
+
+	// 3. Создаем нижний круг (смещаем вниз от центра)
+	const bottomCircle = Matter.Bodies.circle(
+		PLAYER.x,
+		PLAYER.y + (PLAYER.height / 2 - PLAYER.radius),
+		PLAYER.radius,
+		{ label: 'Player_Bottom' },
+	)
+	const playerBody = Matter.Body.create({
+		parts: [mainRect, topCircle, bottomCircle],
 		label: 'Player',
-		inertia: Infinity,
+		inertia: Infinity, // Запрещаем Марио вращаться/падать на бок
+		friction: 0, // Обнуляем трение, чтобы не было зацепов за стены
+		restitution: 0, // Запрещаем Марио прыгать как резиновый мячик при падении
 	})
 
 	//Земля
@@ -61,16 +90,16 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	const wallThickness = 300
 	const leftWall = Matter.Bodies.rectangle(
 		-wallThickness / 2,
-		height / 2,
+		config.levelHeight / 2,
 		wallThickness,
-		height * 2,
+		config.levelHeight * 2,
 		{ isStatic: true },
 	)
 	const rightWall = Matter.Bodies.rectangle(
 		levelWidth + wallThickness / 2,
-		height / 2,
+		config.levelHeight / 2,
 		wallThickness,
-		height * 2,
+		config.levelHeight * 2,
 		{ isStatic: true },
 	)
 
@@ -80,7 +109,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	const offset = config.flagpoleOffsetFromEnd ?? 350
 	const flagpoleBody = Matter.Bodies.rectangle(
 		levelWidth - offset,
-		height - 40 - flagHeight / 2,
+		config.levelHeight - 40 - flagHeight / 2,
 		flagWidth,
 		flagHeight,
 		{
@@ -94,7 +123,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	const castleWidth = 200
 	const castleHight = 170
 	const castleX = levelWidth - 50 - castleWidth / 2
-	const castleY = height - 40 - castleHight / 2
+	const castleY = config.levelHeight - 40 - castleHight / 2
 	const castleBody = Matter.Bodies.rectangle(castleX, castleY, castleWidth, castleHight, {
 		label: 'Castle',
 		isStatic: true,
@@ -102,8 +131,8 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	})
 
 	// ---------------- BLOCKS ----------------
-	const blockEntities: Record<string, any> = {};
-	(config.blocks ?? []).forEach((b, i) => {
+	const blockEntities: Record<string, any> = {}
+	;(config.blocks ?? []).forEach((b, i) => {
 		const body = createStatic(b, `Block_${i}`)
 
 		blockEntities[`block_${i}`] = {
@@ -116,8 +145,8 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	Matter.World.add(world, [flagpoleBody, leftWall, rightWall, playerBody, castleBody])
 
 	return {
-		physics: { engine, world },
-		camera: { x: 0 },
+		physics: { engine, world, levelHeight: config.levelHeight },
+		camera: { x: 0, y: config.levelHeight - screenHeight },
 
 		flagpole: {
 			body: flagpoleBody,

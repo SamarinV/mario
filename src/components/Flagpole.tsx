@@ -10,8 +10,6 @@ interface FlagpoleProps {
 
 export const Flagpole: React.FC<FlagpoleProps> = ({ size, body, flagOffset = 0 }) => {
 	const [width, height] = size
-
-	console.log(flagOffset)
 	const x = body.position.x - width / 2 - 50
 	const y = body.position.y - height / 2
 

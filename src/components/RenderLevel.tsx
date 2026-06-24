@@ -7,6 +7,7 @@ export const RenderLevel = (entities: any) => {
 	if (!entities) return null
 
 	const cameraX = entities.camera?.x ?? 0
+	const cameraY = entities.camera?.y ?? 0
 
 	const renderableKeys = Object.keys(entities).filter(
 		(key) => key !== 'physics' && key !== 'camera' && entities[key] && entities[key].renderer,
@@ -26,7 +27,7 @@ export const RenderLevel = (entities: any) => {
 					top: 0,
 					right: 0,
 					bottom: 0,
-					transform: [{ translateX: -cameraX }],
+					transform: [{ translateX: -cameraX }, { translateY: -cameraY }],
 				}}
 			>
 				{renderableKeys.map((key) => {
