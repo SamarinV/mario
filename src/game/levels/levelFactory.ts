@@ -80,7 +80,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	const offset = config.flagpoleOffsetFromEnd ?? 350
 	const flagpoleBody = Matter.Bodies.rectangle(
 		levelWidth - offset,
-		height - 50 - flagHeight / 2,
+		height - 40 - flagHeight / 2,
 		flagWidth,
 		flagHeight,
 		{
@@ -94,7 +94,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	const castleWidth = 200
 	const castleHight = 170
 	const castleX = levelWidth - 50 - castleWidth / 2
-	const castleY = height - 50 - castleHight / 2
+	const castleY = height - 40 - castleHight / 2
 	const castleBody = Matter.Bodies.rectangle(castleX, castleY, castleWidth, castleHight, {
 		label: 'Castle',
 		isStatic: true,
