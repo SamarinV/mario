@@ -1,10 +1,10 @@
 import Matter from 'matter-js'
-import { EngineContext, EntitiesType } from './types'
+import { EngineContext, EntitiesType, PhysicsEvent } from './types'
 import { createBlockDebris } from '../effects/createBlockDebris'
 
 export const controlSystem = (
 	entities: EntitiesType,
-	{ events = [] }: EngineContext, // Убрали actions, оставили только events
+	{ events = [], dispatch }: EngineContext, // Убрали actions, оставили только events
 ) => {
 	const { player } = entities
 	if (!player) return entities
@@ -17,22 +17,18 @@ export const controlSystem = (
 		Object.assign(player.body, { friction: 0, frictionStatic: 0, frictionAir: 0 })
 	}
 
+	const updateHud = (coins: number, score: number, lives: number) => {
+		dispatch({
+			type: 'hud_update',
+			payload: {
+				coins,
+				score,
+				lives,
+			},
+		})
+	}
 	// ОБРАБОТКА ВСЕХ СОБЫТИЙ (И управление, и удаление блоков приходят сюда)
-	events.forEach((event: any) => {
-		if (event.type === 'break_block') {
-			const { blockKey, blockBody } = event.payload
-
-			if (entities[blockKey]) {
-				const x = blockBody.position.x
-				const y = blockBody.position.y
-
-				Matter.World.remove(world, blockBody)
-				delete entities[blockKey]
-
-				createBlockDebris(entities, world, x, y)
-			}
-		}
-
+	events.forEach((event: PhysicsEvent) => {
 		// Логика катсцен
 		if (player.isCutscene && ['move', 'stop', 'jump'].includes(event.type)) return
 
@@ -57,10 +53,39 @@ export const controlSystem = (
 				player.currentMoveX = 0
 				player.dead = false
 				break
+			case 'add_coins':
+				entities.player.coins += event.value
+				updateHud(entities.player.coins, entities.player.score, entities.player.lives)
+				break
+			case 'add_score':
+				entities.player.score += event.value
+				updateHud(entities.player.coins, entities.player.score, entities.player.lives)
+
+				break
+			case 'add_coins_and_score':
+				entities.player.score += event.payload.score
+				entities.player.coins += event.payload.coins
+				updateHud(entities.player.coins, entities.player.score, entities.player.lives)
+
+				break
+			case 'break_block':
+				const { blockKey, blockBody } = event.payload
+				if (entities[blockKey]) {
+					const x = blockBody.position.x
+					const y = blockBody.position.y
+					Matter.World.remove(world, blockBody)
+					delete entities[blockKey]
+					createBlockDebris(entities, world, x, y)
+				}
+				dispatch({
+					type: 'add_score',
+					value: 50,
+				})
+				break
 			case 'coin_block_hit':
 				const block = entities[event.payload.blockKey]
 
-				if (!block || block.used) return entities
+				if (!block || block.used) return
 
 				block.used = true
 
@@ -75,6 +100,13 @@ export const controlSystem = (
 					life: 70,
 					renderer: require('../entities/Coin').Coin,
 				}
+				dispatch({
+					type: 'add_coins_and_score',
+					payload: {
+						coins: 1,
+						score: 100,
+					},
+				})
 				break
 		}
 	})

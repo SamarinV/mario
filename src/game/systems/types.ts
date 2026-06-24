@@ -8,10 +8,37 @@ export type PhysicsEvent =
 	| { type: 'player_fell' }
 	| { type: 'level_completed' }
 	| {
+			type: 'coin_block_hit'
+			payload: {
+				blockKey: string
+				blockBody: any
+			}
+	  }
+	| {
 			type: 'break_block'
 			payload: {
 				blockKey: string
-				blockBody: any // или Matter.Body, если импортирован matter-js
+				blockBody: any
+			}
+	  }
+	| {
+			type: 'add_coins'
+			value: number
+	  }
+	| {
+			type: 'add_score'
+			value: number
+	  }
+	| {
+			type: 'add_coins_and_score'
+			payload: { coins: number; score: number }
+	  }
+	| {
+			type: 'hud_update'
+			payload: {
+				coins: number
+				score: number
+				lives: number
 			}
 	  }
 
@@ -34,6 +61,9 @@ export type PlayerEntityType = {
 	renderer: any
 	isCutscene?: boolean
 	hidden?: boolean
+	coins: number
+	score: number
+	lives: number
 }
 
 export type FlagpoleEntityType = {
@@ -58,8 +88,8 @@ export type BlockEntityType = {
 }
 
 export type EntitiesType = {
-	physics: { engine: Matter.Engine; world: Matter.World, levelHeight: number }
-	camera: { x: number, y: number }
+	physics: { engine: Matter.Engine; world: Matter.World; levelHeight: number }
+	camera: { x: number; y: number }
 	player: PlayerEntityType
 	flagpole?: FlagpoleEntityType
 	castle?: { body: Matter.Body; size: [number, number]; renderer: any; cameraX?: number }

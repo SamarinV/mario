@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Text, View } from 'react-native'
 import { GameEngine } from 'react-native-game-engine'
 import { RectButton } from 'react-native-gesture-handler'
@@ -15,6 +15,7 @@ import {
 } from '../game/systems'
 import { setupEngine } from '../game/systems/setupEngine'
 import { PhysicsEvent } from '../game/systems/types'
+import { HUD } from '../components/HUD'
 
 type Entities = typeof level1
 type EngineRef = {
@@ -23,6 +24,11 @@ type EngineRef = {
 
 export const GameScreen = () => {
 	const engineRef = React.useRef<EngineRef>(null)
+	const [hud, setHud] = useState({
+		score: 0,
+		coins: 0,
+		lives: 3,
+	})
 
 	const getInitialEntities = (): Entities => {
 		return level1
@@ -54,6 +60,9 @@ export const GameScreen = () => {
 		if (e.type === 'player_fell') {
 			respawnPlayer()
 		}
+		if (e.type === 'hud_update') {
+			setHud(e.payload)
+		}
 	}
 
 	return (
@@ -73,7 +82,7 @@ export const GameScreen = () => {
 				onEvent={onEvent}
 				renderer={RenderLevel}
 			/>
-
+			<HUD score={hud.score} coins={hud.coins} lives={hud.lives} world="1-1" />
 			<View
 				style={{
 					position: 'absolute',
