@@ -1,4 +1,6 @@
-export const coinEffectSystem = (entities: any) => {
+import { EntitiesType } from "./types"
+
+export const coinEffectSystem = (entities: EntitiesType) => {
 	Object.keys(entities).forEach((key) => {
 		if (!key.startsWith('coin_fx_')) return
 

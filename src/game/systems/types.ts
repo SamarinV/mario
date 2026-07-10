@@ -41,6 +41,21 @@ export type PhysicsEvent =
 				lives: number
 			}
 	  }
+	| {
+			type: 'goomba_dead'
+			payload: {
+				goombaKey: string
+			}
+	  }
+	| {
+			type: 'goomba_change_direction'
+			payload: {
+				goombaKey: string
+			}
+	  }
+	| {
+			type: 'player_hit_by_goomba'
+	  }
 
 export type EngineContext = {
 	events: PhysicsEvent[]
@@ -85,6 +100,12 @@ export type BlockEntityType = {
 	size: [number, number]
 	cameraX: number
 	isDestroyed?: boolean
+}
+export type GoombaEntityType = {
+	body: Matter.Body
+	state: 'walkLef' | 'walkRight' | 'dead'
+	frame: number
+	size: [number, number]
 }
 
 export type EntitiesType = {

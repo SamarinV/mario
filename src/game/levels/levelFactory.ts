@@ -14,9 +14,10 @@ interface LevelConfig {
 	coinBlocks?: Rect[]
 	levelHeight: number
 	flagpoleOffsetFromEnd?: number
+	goombas: Rect[]
 }
 
-export const createLevel = (config: LevelConfig): EntitiesType => {
+export const levelFactory = (config: LevelConfig): EntitiesType => {
 	const engine = Matter.Engine.create({ enableSleeping: false })
 	const world = engine.world
 	engine.gravity.y = 1.2
@@ -35,7 +36,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		return body
 	}
 	//Игрок
-	const mainRect = Matter.Bodies.rectangle(
+	const mainBody = Matter.Bodies.rectangle(
 		PLAYER.x,
 		PLAYER.y,
 		PLAYER.width,
@@ -44,7 +45,7 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	)
 
 	// 2. Создаем верхний круг (смещаем вверх от центра)
-	const topCircle = Matter.Bodies.circle(
+	const topBody = Matter.Bodies.circle(
 		PLAYER.x,
 		PLAYER.y - (PLAYER.height / 2 - PLAYER.radius),
 		PLAYER.radius,
@@ -54,18 +55,16 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 	)
 
 	// 3. Создаем нижний круг (смещаем вниз от центра)
-	const bottomCircle = Matter.Bodies.circle(
+	const bottomBody = Matter.Bodies.circle(
 		PLAYER.x,
 		PLAYER.y + (PLAYER.height / 2 - PLAYER.radius),
 		PLAYER.radius,
 		{ label: 'Player_Bottom' },
 	)
 	const playerBody = Matter.Body.create({
-		parts: [mainRect, topCircle, bottomCircle],
+		parts: [mainBody, topBody, bottomBody],
 		label: 'Player',
-		inertia: Infinity, // Запрещаем Марио вращаться/падать на бок
-		friction: 0, // Обнуляем трение, чтобы не было зацепов за стены
-		restitution: 0, // Запрещаем Марио прыгать как резиновый мячик при падении
+		inertia: Infinity,
 	})
 
 	//Земля
@@ -161,6 +160,28 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		}
 	})
 
+	//Goomba
+	const goombaEntities: Record<string, any> = {}
+	;(config.goombas ?? []).forEach((b, i) => {
+		const body = Matter.Bodies.rectangle(b.x + b.w / 2, b.y + b.h / 2, b.w, b.h, {
+			label: `Goomba_${i}`,
+			friction: 0,
+		})
+		Matter.World.add(world, body)
+
+		goombaEntities[`goomba${i}`] = {
+			body,
+			size: [b.w, b.h],
+			state: 'walkLeft',
+			direction: -1,
+			speed: 0.5,
+			frame: 0,
+			frameTimer: 0,
+			dead: false,
+			renderer: require('../entities/Goomba').Goomba,
+		}
+	})
+
 	Matter.World.add(world, [flagpoleBody, leftWall, rightWall, playerBody, castleBody])
 
 	return {
@@ -200,5 +221,6 @@ export const createLevel = (config: LevelConfig): EntitiesType => {
 		...groundEntities,
 		...blockEntities,
 		...coinBlockEntities,
+		...goombaEntities,
 	}
 }

@@ -12,6 +12,7 @@ import {
 	cutsceneSystem,
 	physicsSystem,
 	coinEffectSystem,
+	goombaSystem,
 } from '../game/systems'
 import { setupEngine } from '../game/systems/setupEngine'
 import { PhysicsEvent } from '../game/systems/types'
@@ -77,6 +78,7 @@ export const GameScreen = () => {
 					physicsSystem,
 					cameraSystem,
 					coinEffectSystem,
+					goombaSystem,
 				]}
 				entities={entities}
 				onEvent={onEvent}

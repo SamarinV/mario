@@ -1,23 +1,23 @@
 import Matter from 'matter-js'
-import { EngineContext, EntitiesType } from './types'
+import { EngineContext, EntitiesType, PhysicsEvent } from './types'
 
-export const cutsceneSystem = (entities: EntitiesType, { dispatch }: EngineContext) => {
-	const { player, flagpole, castle, physics } = entities
+export const cutsceneSystem = (
+	entities: EntitiesType,
+	{ events = [], dispatch }: EngineContext,
+) => {
+	const { player, flagpole, castle } = entities
 	if (!flagpole || !player) return entities
 
 	//Инициализация скольжения при касании флага
 	if (!flagpole.isLowering && !flagpole.isWalkingToCastle) {
-		const pairs = physics.engine.pairs.list
-		for (const pair of pairs) {
-			const labels = [pair.bodyA.label, pair.bodyB.label]
-			if (labels.includes('Player') && labels.includes('Flagpole')) {
+		events.forEach((event) => {
+			if (event.type === 'level_completed') {
 				flagpole.isLowering = true
 				player.currentMoveX = 0
 				player.isCutscene = true
 				Matter.Body.setVelocity(player.body, { x: 0, y: 2 })
-				break
 			}
-		}
+		})
 	}
 
 	//Опускание флага
@@ -41,7 +41,6 @@ export const cutsceneSystem = (entities: EntitiesType, { dispatch }: EngineConte
 			flagpole.isWalkingToCastle = false
 			player.currentMoveX = 0
 			Matter.Body.setVelocity(player.body, { x: 0, y: 0 })
-			dispatch({ type: 'level_completed' })
 		}
 	}
 

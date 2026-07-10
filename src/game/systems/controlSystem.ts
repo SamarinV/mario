@@ -10,7 +10,6 @@ export const controlSystem = (
 	if (!player) return entities
 
 	const world = entities.physics.world
-	player.currentMoveX = player.currentMoveX ?? 0
 
 	// Очистка физического трения игрока
 	if (player.body && player.body.friction !== 0) {
@@ -28,7 +27,7 @@ export const controlSystem = (
 		})
 	}
 	// ОБРАБОТКА ВСЕХ СОБЫТИЙ (И управление, и удаление блоков приходят сюда)
-	events.forEach((event: PhysicsEvent) => {
+	events.forEach((event) => {
 		// Логика катсцен
 		if (player.isCutscene && ['move', 'stop', 'jump'].includes(event.type)) return
 
@@ -47,10 +46,12 @@ export const controlSystem = (
 				}
 				break
 			case 'respawn':
+				if (player.lives <= 0) return
 				Matter.Body.setPosition(player.body, { x: player.body.position.x - 100, y: 250 })
 				Matter.Body.setVelocity(player.body, { x: 0, y: 0 })
 				Matter.Body.setAngularVelocity(player.body, 0)
 				player.currentMoveX = 0
+				player.lives -= 1
 				player.dead = false
 				break
 			case 'add_coins':
@@ -84,19 +85,14 @@ export const controlSystem = (
 				break
 			case 'coin_block_hit':
 				const block = entities[event.payload.blockKey]
-
 				if (!block || block.used) return
-
 				block.used = true
-
 				const coinId = `coin_fx_${Date.now()}`
 
 				entities[coinId] = {
 					x: block.body.position.x,
 					y: block.body.position.y - 10,
-
 					startY: block.body.position.y - 10,
-
 					life: 70,
 					renderer: require('../entities/Coin').Coin,
 				}
@@ -108,6 +104,40 @@ export const controlSystem = (
 					},
 				})
 				break
+			case 'goomba_dead': {
+				const { goombaKey } = event.payload
+				const goomba = entities[goombaKey]
+				if (!goomba) break
+				goomba.state = 'dead'
+				if (goomba.body) {
+					Matter.World.remove(world, goomba.body)
+				}
+				Matter.Body.setVelocity(player.body, {
+					x: player.body.velocity.x,
+					y: -7,
+				})
+				dispatch({
+					type: 'add_score',
+					value: 100,
+				})
+				setTimeout(() => {
+					if (entities[goombaKey]) {
+						if (entities[goombaKey].body) {
+							Matter.World.remove(world, entities[goombaKey].body)
+						}
+						delete entities[goombaKey]
+					}
+				}, 600)
+				break
+			}
+			case 'player_hit_by_goomba': {
+				console.log('player hit by goomba')
+				dispatch({
+					type: 'respawn',
+				})
+
+				break
+			}
 		}
 	})
 
