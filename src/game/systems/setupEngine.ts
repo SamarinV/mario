@@ -13,11 +13,13 @@ export const getCollisionBodies = (pair: Matter.Pair) => {
 		if (bodyB.label.startsWith(name)) return bodyB
 		return null
 	}
+	const isBothGoombas = bodyA.label?.startsWith('Goomba') && bodyB.label?.startsWith('Goomba')
 	return {
 		player: isPlayerA ? getMainBody(bodyA) : isPlayerB ? getMainBody(bodyB) : null,
 		goomba: findBodyByLabel(bodyA, bodyB, 'Goomba'),
 		flagpole: findBodyByLabel(bodyA, bodyB, 'Flagpole'),
 		block: findBodyByLabel(bodyA, bodyB, 'Block') || findBodyByLabel(bodyA, bodyB, 'CoinBlock'),
+		isBothGoombas,
 	}
 }
 
@@ -38,7 +40,7 @@ export const setupEngine = (
 		}> = []
 
 		event.pairs.forEach((pair) => {
-			const { player, goomba, block, flagpole } = getCollisionBodies(pair)
+			const { player, goomba, block, flagpole, isBothGoombas } = getCollisionBodies(pair)
 
 			// ---------- GOOMBA/PLAYER ----------
 			if (player && goomba) {
@@ -60,9 +62,11 @@ export const setupEngine = (
 					dispatch({
 						type: 'player_hit_by_goomba',
 					})
+					dispatch({
+						type: 'goomba_change_direction',
+						payload: { goombaKey },
+					})
 				}
-
-				return
 			}
 
 			// ---------- GOOMBA/SOLIDS-OBJECTS ----------
@@ -78,21 +82,30 @@ export const setupEngine = (
 					other.label === 'Player'
 
 				if (!isSolid) return
-				
+
 				const normal = pair.collision.normal
-				
+
 				// столкновение по X
 				const isSideCollision = Math.abs(normal.x) > 0.7
-				
+
 				if (isSideCollision) {
-					console.log('goomba:', goomba.label, 'other:', other.label)
 					dispatch({
 						type: 'goomba_change_direction',
 						payload: { goombaKey },
 					})
-				}
+					if (other.label.startsWith('Goomba')) {
+						const otherGoombaKey = Object.keys(entities).find(
+							(key) => entities[key]?.body === other,
+						)
 
-				return
+						if (otherGoombaKey) {
+							dispatch({
+								type: 'goomba_change_direction',
+								payload: { goombaKey: otherGoombaKey },
+							})
+						}
+					}
+				}
 			}
 
 			//Завершение уровня
@@ -129,11 +142,8 @@ export const setupEngine = (
 		})
 
 		if (hitBlocks.length === 0) return
-
 		hitBlocks.sort((a, b) => a.distanceX - b.distanceX)
-
 		const bestHit = hitBlocks[0]
-
 		if (bestHit.blockBody.label.startsWith('CoinBlock_')) {
 			dispatch({
 				type: 'coin_block_hit',
@@ -142,7 +152,6 @@ export const setupEngine = (
 					blockBody: bestHit.blockBody,
 				},
 			})
-			return
 		}
 		if (bestHit.blockBody.label.startsWith('Block_')) {
 			dispatch({

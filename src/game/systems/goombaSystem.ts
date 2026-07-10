@@ -29,9 +29,7 @@ export const goombaSystem = (entities: EntitiesType, { events = [], dispatch }: 
 			y: goomba.body.velocity.y,
 		})
 
-		// анимация
 		goomba.frameTimer++
-
 		if (goomba.state !== 'dead' && goomba.frameTimer % 10 === 0) {
 			goomba.frame = goomba.frame === 0 ? 1 : 0
 		}

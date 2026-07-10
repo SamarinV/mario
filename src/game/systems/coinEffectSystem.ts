@@ -1,4 +1,4 @@
-import { EntitiesType } from "./types"
+import { EntitiesType } from './types'
 
 export const coinEffectSystem = (entities: EntitiesType) => {
 	Object.keys(entities).forEach((key) => {

@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import { EngineContext, EntitiesType, PhysicsEvent } from './types'
+import { EngineContext, EntitiesType } from './types'
 
 export const cutsceneSystem = (
 	entities: EntitiesType,

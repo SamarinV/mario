@@ -4,7 +4,7 @@ import { EngineContext, EntitiesType } from './types'
 export const physicsSystem = (entities: EntitiesType, { dispatch }: EngineContext) => {
 	const { engine } = entities.physics
 	const { player } = entities
-
+	const fallThreshold = entities.physics.levelHeight + 200
 	if (!player) return entities
 
 	//удаление сущностей с нулевым life
@@ -25,8 +25,8 @@ export const physicsSystem = (entities: EntitiesType, { dispatch }: EngineContex
 	Matter.Body.setVelocity(player.body, { x: player.currentMoveX * 5, y: player.body.velocity.y })
 	Matter.Engine.update(engine, 1000 / 60)
 
-	// Проверка падения
-	if (player.body.position.y > entities.physics.levelHeight + 200 && !player.dead) {
+	// Проверка падения игрока
+	if (player.body.position.y > fallThreshold && !player.dead) {
 		player.dead = true
 		dispatch({ type: 'player_fell' })
 	}

@@ -1,10 +1,10 @@
 import Matter from 'matter-js'
 import { Dimensions } from 'react-native'
+import { Castle } from '../entities/Castle'
+import { Flagpole } from '../entities/Flagpole'
 import { Ground } from '../entities/Ground'
 import { Player } from '../entities/Player'
 import { EntitiesType } from '../systems/types'
-import { Flagpole } from '../entities/Flagpole'
-import { Castle } from '../entities/Castle'
 
 const { height: screenHeight } = Dimensions.get('window')
 type Rect = { x: number; y: number; w: number; h: number }
@@ -93,14 +93,14 @@ export const levelFactory = (config: LevelConfig): EntitiesType => {
 		config.levelHeight / 2,
 		wallThickness,
 		config.levelHeight * 2,
-		{ isStatic: true },
+		{ isStatic: true, label: 'Wall' },
 	)
 	const rightWall = Matter.Bodies.rectangle(
 		levelWidth + wallThickness / 2,
 		config.levelHeight / 2,
 		wallThickness,
 		config.levelHeight * 2,
-		{ isStatic: true },
+		{ isStatic: true, label: 'Wall' },
 	)
 
 	// Флагшток

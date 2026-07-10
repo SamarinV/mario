@@ -1,11 +1,8 @@
 import Matter from 'matter-js'
-import { EngineContext, EntitiesType, PhysicsEvent } from './types'
 import { createBlockDebris } from '../effects/createBlockDebris'
+import { EngineContext, EntitiesType } from './types'
 
-export const controlSystem = (
-	entities: EntitiesType,
-	{ events = [], dispatch }: EngineContext, // Убрали actions, оставили только events
-) => {
+export const controlSystem = (entities: EntitiesType, { events = [], dispatch }: EngineContext) => {
 	const { player } = entities
 	if (!player) return entities
 
@@ -26,12 +23,11 @@ export const controlSystem = (
 			},
 		})
 	}
-	// ОБРАБОТКА ВСЕХ СОБЫТИЙ (И управление, и удаление блоков приходят сюда)
+	// ОБРАБОТКА ВСЕХ СОБЫТИЙ
 	events.forEach((event) => {
 		// Логика катсцен
 		if (player.isCutscene && ['move', 'stop', 'jump'].includes(event.type)) return
 
-		// ИГРОВОЕ УПРАВЛЕНИЕ
 		switch (event.type) {
 			case 'move':
 				player.currentMoveX = event.x
@@ -131,7 +127,6 @@ export const controlSystem = (
 				break
 			}
 			case 'player_hit_by_goomba': {
-				console.log('player hit by goomba')
 				dispatch({
 					type: 'respawn',
 				})
