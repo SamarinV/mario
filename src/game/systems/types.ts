@@ -7,6 +7,7 @@ export type PhysicsEvent =
 	| { type: 'respawn' }
 	| { type: 'player_fell' }
 	| { type: 'level_completed' }
+	| { type: 'game_over' }
 	| {
 			type: 'coin_block_hit'
 			payload: {

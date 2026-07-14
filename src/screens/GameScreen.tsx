@@ -1,26 +1,27 @@
 import React, { useEffect, useState } from 'react'
-import { Text, View } from 'react-native'
 import { GameEngine } from 'react-native-game-engine'
-import { RectButton } from 'react-native-gesture-handler'
-import { CustomJoystick, JoystickMoveEventType } from '../components/CustomJoystick'
+import { JoystickMoveEventType } from '../components/CustomJoystick'
+import { GameControls } from '../components/GameControls'
+import { GameOverOverlay } from '../components/GameOverOverlay'
+import { HUD } from '../components/HUD'
+import { LevelCompletedOverlay } from '../components/LevelCompletedOverlay'
 import { RenderLevel } from '../components/RenderLevel'
-import { level1 } from '../game/levels/level1'
+import { createLevel } from '../game/levels/createLevel'
 import {
 	animationSystem,
 	cameraSystem,
+	coinEffectSystem,
 	controlSystem,
 	cutsceneSystem,
-	physicsSystem,
-	coinEffectSystem,
 	goombaSystem,
+	physicsSystem,
 } from '../game/systems'
 import { setupEngine } from '../game/systems/setupEngine'
-import { PhysicsEvent } from '../game/systems/types'
-import { HUD } from '../components/HUD'
+import { EntitiesType, PhysicsEvent } from '../game/systems/types'
 
-type Entities = typeof level1
 type EngineRef = {
 	dispatch: (action: PhysicsEvent) => void
+	swap: (newEntities: EntitiesType) => void
 } | null
 
 export const GameScreen = () => {
@@ -30,11 +31,11 @@ export const GameScreen = () => {
 		coins: 0,
 		lives: 3,
 	})
-
-	const getInitialEntities = (): Entities => {
-		return level1
-	}
-	const entities = getInitialEntities()
+	const [currentLevel, setCurrentLevel] = useState(1)
+	const [gameKey, setGameKey] = useState(0)
+	const [isGameOver, setIsGameOver] = useState(false)
+	const [isLevelCompleted, setIsLevelCompleted] = useState(false)
+	const [entities, setEntities] = useState<EntitiesType>(() => createLevel(currentLevel))
 
 	const handleMove = (event: JoystickMoveEventType) => {
 		const engine = engineRef.current
@@ -55,7 +56,7 @@ export const GameScreen = () => {
 		if (!entities) return
 
 		setupEngine(entities.physics.engine, entities, (event) => engineRef.current?.dispatch(event))
-	}, [])
+	}, [entities])
 
 	const onEvent = (e: PhysicsEvent) => {
 		if (e.type === 'player_fell') {
@@ -64,11 +65,36 @@ export const GameScreen = () => {
 		if (e.type === 'hud_update') {
 			setHud(e.payload)
 		}
+		if (e.type === 'game_over') {
+			setIsGameOver(true)
+		}
+		if (e.type === 'level_completed') {
+			setIsLevelCompleted(true)
+		}
+	}
+	const loadNewLevel = (levelNumber: number) => {
+		const freshEntities = createLevel(levelNumber)
+		setEntities(freshEntities)
+		setGameKey((prev) => prev + 1)
+	}
+
+	const handleNextLevel = () => {
+		const nextLevel = currentLevel + 1
+		setCurrentLevel(nextLevel)
+		setIsLevelCompleted(false)
+		loadNewLevel(nextLevel)
+	}
+
+	const handleRestart = () => {
+		setIsGameOver(false)
+		setHud({ score: 0, coins: 0, lives: 3 })
+		loadNewLevel(currentLevel)
 	}
 
 	return (
 		<>
 			<GameEngine
+				key={gameKey}
 				ref={engineRef as any}
 				style={{ flex: 1, backgroundColor: '#73cdfa' }}
 				systems={[
@@ -85,62 +111,19 @@ export const GameScreen = () => {
 				renderer={RenderLevel}
 			/>
 			<HUD score={hud.score} coins={hud.coins} lives={hud.lives} world="1-1" />
-			<View
-				style={{
-					position: 'absolute',
-					bottom: 20,
-					left: 20,
-					zIndex: 999,
-					elevation: 999,
-				}}
-			>
-				<CustomJoystick
-					radius={75}
-					onMove={handleMove}
-					onStop={() => {
-						engineRef.current?.dispatch({
-							type: 'stop',
-						})
-					}}
-				/>
-			</View>
-
-			<View
-				style={{
-					position: 'absolute',
-					bottom: 40,
-					right: 40,
-					zIndex: 999,
-					elevation: 999,
-				}}
-			>
-				<RectButton
-					onPress={() => {
-						engineRef.current?.dispatch({
-							type: 'jump',
-						})
-					}}
-					style={{
-						width: 100,
-						height: 100,
-						borderRadius: 50,
-						backgroundColor: '#474747',
-						justifyContent: 'center',
-						alignItems: 'center',
-						opacity: 0.6,
-					}}
-				>
-					<Text
-						style={{
-							color: 'white',
-							fontSize: 24,
-							fontWeight: 'bold',
-						}}
-					>
-						↑
-					</Text>
-				</RectButton>
-			</View>
+			{!isGameOver && (
+				<>
+					<GameControls
+						onMove={handleMove}
+						onStop={() => engineRef.current?.dispatch({ type: 'stop' })}
+						onJump={() => engineRef.current?.dispatch({ type: 'jump' })}
+					/>
+				</>
+			)}
+			{isLevelCompleted && (
+				<LevelCompletedOverlay currentLevel={currentLevel} onNextLevel={handleNextLevel} />
+			)}
+			{isGameOver && <GameOverOverlay onRestart={handleRestart} />}
 		</>
 	)
 }

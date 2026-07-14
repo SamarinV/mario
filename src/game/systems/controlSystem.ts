@@ -42,13 +42,19 @@ export const controlSystem = (entities: EntitiesType, { events = [], dispatch }:
 				}
 				break
 			case 'respawn':
-				if (player.lives <= 0) return
+				if (!player.dead) break
+				console.log(player.lives)
+				if (player.lives <= 1) {
+					dispatch({ type: 'game_over' })
+					return
+				}
 				Matter.Body.setPosition(player.body, { x: player.body.position.x - 100, y: 250 })
 				Matter.Body.setVelocity(player.body, { x: 0, y: 0 })
 				Matter.Body.setAngularVelocity(player.body, 0)
 				player.currentMoveX = 0
-				player.lives -= 1
 				player.dead = false
+				player.lives -= 1
+				updateHud(player.coins, player.score, player.lives)
 				break
 			case 'add_coins':
 				entities.player.coins += event.value
@@ -127,6 +133,10 @@ export const controlSystem = (entities: EntitiesType, { events = [], dispatch }:
 				break
 			}
 			case 'player_hit_by_goomba': {
+				if (player.dead) break
+
+				// Помечаем игрока мертвым СРАЗУ в момент удара
+				player.dead = true
 				dispatch({
 					type: 'respawn',
 				})
